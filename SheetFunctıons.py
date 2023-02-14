@@ -1,15 +1,22 @@
+
+
 import gspread
 import pandas as pd
 
-sa = gspread.service_account()
-sh = sa.open("(MA) SIRMA METAL  - İhracat Sistemi - Made by Muhammet AKMAN")
-wk = sh.worksheet("ARAMA LİSTELERİ V.2")
 
-
+def set_work_sheet(user):
+    sa = gspread.service_account()
+    if user == "ma":
+        sh = sa.open("(MA) SIRMA METAL  - İhracat Sistemi - Made by Muhammet AKMAN")
+    elif user == "amir":
+        sh = sa.open("(MOUSTAPHA) SIRMA METAL  - İhracat Sistemi - Made by Muhammet AKMAN")
+    elif user == "ali":
+        sh = sa.open("(AL) SIRMA METAL  - İhracat Sistemi - Made by Muhammet AKMAN")
+    return sh.worksheet("ARAMA LİSTELERİ V.2")
 
 #todo 1 : get all companies information
 
-def get_all_companies():
+def get_all_companies(wk):
     comp_info = wk.batch_get(['C3:C','D3:D',"I3:I",'H3:H',"J3:J","K3:K"])
     imp_or_not = wk.batch_get(['E3:E','F3:F'])
     df1 = pd.DataFrame(comp_info)
@@ -25,7 +32,7 @@ def get_all_companies():
     df2= pd.concat(li2,1)
     return df1.transpose(),df2.transpose()[:df1.shape[1]]
 
-df_company, df_impornot = get_all_companies()
+
 
 
 #todo 2 : get all information of a certen company ?
@@ -35,7 +42,7 @@ df_company, df_impornot = get_all_companies()
 #todo 4 : get compynies in certen country
 
 #Add New Companies
-def add(row, where, add= False):
+def add(row, where, wk,df_company,add= False):
     i = int(where)
     if add:
     #adding to pandas
@@ -54,26 +61,25 @@ def add(row, where, add= False):
     wk.update("K{}".format(i),row[5])
 
 # ger history of contacts
-def history(i):
+def history(i,wk):
     return wk.batch_get([f"O{i}:T{i}",f"V{i}:AA{i}",f"AC{i}:AH{i}",f"AJ{i}:AO{i}", f"AQ{i}:AV{i}",f"AX{i}:BC{i}",f"BD{i}:BI{i}",f"BJ{i}:BO{i}"] )
 
 # update contacts
 i = 3
 
-def update_c(indxOfCompany,whichContact,row, add = True):
+def update_c(indxOfCompany,whichContact,row,wk):
     i = indxOfCompany
-
-    if add: j = whichContact + 1
-    else: j = whichContact
+    j = whichContact-1
     print(i)
-    print(row)
+    print(j)
     li = [[f"O{i}:T{i}",f"V{i}:AA{i}",f"AC{i}:AH{i}",f"AJ{i}:AO{i}", f"AQ{i}:AV{i}",f"AX{i}:BC{i}",f"BD{i}:BI{i}",f"BJ{i}:BO{i}"]]
     wk.batch_update([
             {
                 'range': li[0][j], # head
                 'values': [row]
             }] )
-    print(li[0][whichContact])
+    print(li[0][j])
 
 
-print(df_impornot.iloc[39,:])
+wk = set_work_sheet("ma")
+print(history(474,wk))
